@@ -11,9 +11,9 @@ app.use(express.json());
 
 // Conexión a la base de datos
 const db = mysql.createConnection({
-  host: 'localhost',
+  host: 'db', 
   user: 'root', 
-  password: 'Micontraseña', 
+  password: 'usrpssword', 
   database: 'foro_db' 
 });
 
@@ -25,6 +25,7 @@ db.connect((err) => {
   }
   console.log('Conectado a la base de datos MySQL');
 });
+
 
 // Endpoint para obtener comentarios
 app.get('/comentarios', (req, res) => {
@@ -68,7 +69,48 @@ app.delete('/comentario/:id', (req, res) => {
     });
   });
   
-  
+// Endpoint para obtener todos los hilos
+app.get('/hilos', (req, res) => {
+  const sql = 'SELECT * FROM hilos';
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error('Error al obtener hilos:', err);
+      res.status(500).send('Error en la consulta de hilos');
+      return;
+    }
+    res.json(result);
+  });
+});
+
+// Endpoint para crear un nuevo hilo
+app.post('/hilo', (req, res) => {
+  const { titulo, autor, fecha, contenido } = req.body;
+  const sql = 'INSERT INTO hilos (titulo, autor, fecha, contenido) VALUES (?, ?, ?, ?)';
+  db.query(sql, [titulo, autor, fecha, contenido], (err, result) => {
+    if (err) {
+      console.error('Error al agregar hilo:', err);
+      res.status(500).send('Error al agregar hilo');
+      return;
+    }
+    res.status(201).json({ id: result.insertId, titulo, autor, fecha, contenido });
+  });
+});
+
+// Endpoint para eliminar un hilo
+app.delete('/hilo/:id', (req, res) => {
+  const { id } = req.params;
+  const sql = 'DELETE FROM hilos WHERE id = ?';
+
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error('Error al eliminar hilo:', err);
+      res.status(500).send('Error al eliminar hilo');
+      return;
+    }
+    res.status(204).send(); // Éxito, sin contenido que enviar
+  });
+});
+
 // Iniciar el servidor
 app.listen(port, () => {
   console.log(`Servidor en ejecución en http://localhost:${port}`);
